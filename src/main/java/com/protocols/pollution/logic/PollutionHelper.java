@@ -1,11 +1,18 @@
 package com.protocols.pollution.logic;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
+
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
 import com.api.API;
+import com.api.ArduSimTools;
 import com.api.Copter;
 import com.api.GUI;
 import com.api.ProtocolHelper;
@@ -13,7 +20,10 @@ import com.api.TakeOff;
 import com.api.TakeOffListener;
 import com.api.formations.Formation;
 import com.api.pojo.FlightMode;
+import com.protocols.pollution.gui.PollutionSimProperties;
 import com.protocols.pollution.pojo.ValueSet;
+import com.setup.Text;
+import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
 
 import es.upv.grc.mapper.Location2D;
@@ -54,7 +64,23 @@ public class PollutionHelper extends ProtocolHelper {
 	
 	@Override
 	public void configurationCLI() {
-		//TODO: read the properties files, in case the simulator is run with CLI mode.
+		//TODO: implement in pollutionsimproperties
+		PollutionSimProperties properties = new PollutionSimProperties();
+		ResourceBundle resources;
+		try {
+			FileInputStream fis = new FileInputStream(SimParam.protocolParamFile);
+			resources = new PropertyResourceBundle(fis);
+			fis.close();
+			Properties p = new Properties();
+			for(String key: resources.keySet()){
+				p.setProperty(key,resources.getString(key));
+			}
+			properties.storeParameters(p,resources);
+		} catch (IOException e) {
+			e.printStackTrace();
+			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
+			System.exit(0);
+		}
 	}
 
 	@Override
@@ -83,7 +109,6 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public String setInitialState() {
-		//TODO: Check if this method is needed.
 		return null;
 	}
 
@@ -134,7 +159,13 @@ public class PollutionHelper extends ProtocolHelper {
 			
 			@Override
 			public void onFailure() {
-				// TODO 
+				GUI gui = API.getGUI(0);
+				if (copter.setFlightMode(FlightMode.RTL)) {
+					gui.log("Landing for being unable to calculate the target coordinates.");
+				} else {
+					gui.log("Unable to return to land.");
+				}
+				gui.exit("Finishing...");
 			}
 			
 			@Override
