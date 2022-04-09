@@ -103,21 +103,7 @@ public class PollutionThread extends Thread{
 	
 
 	
-	
-	
-
-	@Override
-	public void run() {
-		M = new int[40][40];
-		
-		/* Wait until takeoff has finished */
-		try {
-			while(!PollutionParam.ready) sleep(100);
-		} catch (InterruptedException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
-		}
-
+	private void spiral() {
 		int xpos = 20;
         int ypos = 20;
         int maxRadius = 0;
@@ -179,7 +165,23 @@ public class PollutionThread extends Thread{
             }
 
         }
+	}
+	
+
+	@Override
+	public void run() {
+		M = new int[40][40];
 		
+		/* Wait until takeoff has finished */
+		try {
+			while(!PollutionParam.ready) sleep(100);
+		} catch (InterruptedException e) {
+			// Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
+		spiral();
 		
 		
 		
