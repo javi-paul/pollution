@@ -18,14 +18,11 @@ import com.api.GUI;
 import com.api.ProtocolHelper;
 import com.api.TakeOff;
 import com.api.TakeOffListener;
-import com.api.formations.Formation;
 import com.api.pojo.FlightMode;
 import com.protocols.pollution.gui.PollutionSimProperties;
 import com.protocols.pollution.pojo.ValueSet;
 import com.setup.Text;
 import com.setup.sim.logic.SimParam;
-import com.uavController.UAVParam;
-
 import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
