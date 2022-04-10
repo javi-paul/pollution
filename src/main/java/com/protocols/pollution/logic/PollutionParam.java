@@ -19,7 +19,6 @@ public class PollutionParam {
 	public static double InitialLongitude = -0.346265;	// (degrees) Longitude for simulations
 	public static double InitialYaw = 0.0;				// (rad) Initial heading for simulations
 	
-	//CHEMOTAXIS
 	
 	public static double altitude = 15;  //To be prompted with GUI
 	public static int width = 100;		//To be prompted with GUI
@@ -27,7 +26,7 @@ public class PollutionParam {
 	public static double density = 10;	//To be prompted with GUI
 	public static Location2DUTM origin;	//Starting origin is formed with InitialLatitude and InitialLongitude
 	public static boolean isSimulation = true;	//TODO
-//	public static String pollutionDataFile;		//TODO
+	public static String pollutionDataFile = "/home/jav/data.txt";		
 	public static PollutionSensor sensor;	//TODO
 	public static volatile boolean ready;	//True when the UAV takes off
 	public static SparseDataset measurements;

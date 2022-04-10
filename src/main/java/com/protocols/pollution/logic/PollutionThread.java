@@ -48,7 +48,7 @@ public class PollutionThread extends Thread{
 	void move(int x, int y) throws LocationNotReadyException {
 		Double xTarget = PollutionParam.origin.x + (x * PollutionParam.density);
 		Double yTarget = PollutionParam.origin.y + (y * PollutionParam.density);
-		gui.log("moving to " + xTarget + " " + yTarget);
+		//gui.log("moving to " + xTarget + " " + yTarget);
 		MoveTo moveTo = copter.moveTo(new Location3D(xTarget, yTarget, PollutionParam.altitude), new MoveToListener() {
 			
 			@Override
@@ -79,7 +79,7 @@ public class PollutionThread extends Thread{
 			PollutionParam.measurements_set.add(new Value(p.getX(), p.getY(), m));
 			if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
 				
-				//this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
+				this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
 			}
 		}
 		visited[p.getX()][p.getY()] = true;
@@ -90,7 +90,7 @@ public class PollutionThread extends Thread{
 	private void drawPoint(Point p, double measure, double min, double max) {
 		Color color = new Color((int) ((measure - min) / (max - min) * 255), 0, 0);
 		try {
-			DrawableSymbolGeo point = Mapper.Drawables.addSymbolGeo(1, Location2DUTM.getGeo(p.getX(), p.getY()),
+			DrawableSymbolGeo point = Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
 					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT);
 			point.updateUpRightText(String.format("%.2f", measure));
 		} catch (Exception e) {
@@ -240,14 +240,14 @@ public class PollutionThread extends Thread{
 		
 		try {
 			Location2DGeo ini = PollutionParam.origin.getGeo();
-			Location2DGeo fin = Location2DUTM.getGeo(PollutionParam.origin.x + (PollutionParam.width * PollutionParam.density), PollutionParam.origin.y + (PollutionParam.density * PollutionParam.density));
+			Location2DGeo fin = Location2DUTM.getGeo(PollutionParam.origin.x + PollutionParam.width, PollutionParam.origin.y + PollutionParam.length);
 			List<Location2DGeo> vertex = new ArrayList<>();
-			/*vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
+			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
 			vertex.add(new Location2DGeo(ini.latitude, fin.longitude));
 			vertex.add(new Location2DGeo(fin.latitude, fin.longitude));
 			vertex.add(new Location2DGeo(fin.latitude, ini.longitude));
 			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
-			Mapper.Drawables.addLinesGeo(2, vertex, Color.BLACK, PollutionParam.STROKE_POINT);*/
+			Mapper.Drawables.addLinesGeo(2, vertex, Color.BLACK, PollutionParam.STROKE_POINT);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
