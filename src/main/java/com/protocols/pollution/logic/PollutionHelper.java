@@ -1,6 +1,8 @@
 package com.protocols.pollution.logic;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
@@ -27,6 +29,7 @@ import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
+import smile.data.SparseDataset;
 
 
 
@@ -94,12 +97,13 @@ public class PollutionHelper extends ProtocolHelper {
 		gui.log("Pollution sensor setup done.");
 		
 		// Coordinates setup
-		PollutionParam.origin = new Location2DUTM(PollutionParam.InitialLatitude, PollutionParam.InitialLongitude);
+		PollutionParam.origin = new Location2DGeo(PollutionParam.InitialLatitude, PollutionParam.InitialLongitude).getUTM();
 		PollutionParam.origin.x -= PollutionParam.width/2.0;
 		PollutionParam.origin.y -= PollutionParam.length/2.0;
 		
 		// Measurement structure
 		PollutionParam.measurements_set = new ValueSet();
+		PollutionParam.measurements = new SparseDataset();
 		
 		PollutionParam.ready = false;
 	}
@@ -198,6 +202,17 @@ public class PollutionHelper extends ProtocolHelper {
 	@Override
 	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		//TODO: store pollution measurements in a .log file
+		System.out.println("log method");
+		try {
+			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results.log"));
+			byte print = Byte.parseByte(PollutionParam.altitude + "");
+			fis.write(print);
+			fis.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 
 	@Override
