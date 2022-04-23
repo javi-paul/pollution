@@ -27,7 +27,7 @@ public class PollutionParam {
 	public static Location2DUTM origin;	//Starting origin is formed with InitialLatitude and InitialLongitude
 	public static boolean isSimulation = true;	//TODO
 	public static String pollutionDataFile = "/home/jav/data.txt";		
-	public static PollutionSensor sensor;	//TODO
+	public static PollutionSensor sensor;
 	public static volatile boolean ready;	//True when the UAV takes off
 	public static SparseDataset measurements;
 	public static final double pThreshold = 5.0;
