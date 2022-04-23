@@ -36,16 +36,18 @@ public class PollutionThread extends Thread{
 	private final Copter copter;
 	private final GUI gui;
 	
+	private Point pMax, p2, pTemp;
+	
 	public PollutionThread() {
 		this.copter = API.getCopter(0);
 		this.gui = API.getGUI(0);
 	}
 	
 	// Move to a point within the grid
-	void move(Point p) throws LocationNotReadyException {
+	private void move(Point p) throws LocationNotReadyException {
 		move(p.getX(), p.getY());
 	}
-	void move(int x, int y) throws LocationNotReadyException {
+	private void move(int x, int y) throws LocationNotReadyException {
 		Double xTarget = PollutionParam.origin.x + (x * PollutionParam.density);
 		Double yTarget = PollutionParam.origin.y + (y * PollutionParam.density);
 		//gui.log("moving to " + xTarget + " " + yTarget);
@@ -69,7 +71,7 @@ public class PollutionThread extends Thread{
 		
 	}
 	
-	double moveAndRead(Point p) throws LocationNotReadyException {
+	private void moveAndRead(Point p) throws LocationNotReadyException {
 		double m;
 		move(p);
 		m = PollutionParam.sensor.read();
@@ -84,7 +86,7 @@ public class PollutionThread extends Thread{
 		}
 		visited[p.getX()][p.getY()] = true;
 		gui.log("Read: [" + p.getX() + ", " + p.getY() + "] = " + m);
-		return m;
+		p.setMeasurement(m);
 	}
 	
 	private void drawPoint(Point p, double measure, double min, double max) {
@@ -98,6 +100,21 @@ public class PollutionThread extends Thread{
 		}
 	}
 	
+	private void drawPerimeter() {
+		try {
+			Location2DGeo ini = PollutionParam.origin.getGeo();
+			Location2DGeo fin = Location2DUTM.getGeo(PollutionParam.origin.x + PollutionParam.width, PollutionParam.origin.y + PollutionParam.length);
+			List<Location2DGeo> vertex = new ArrayList<>();
+			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
+			vertex.add(new Location2DGeo(ini.latitude, fin.longitude));
+			vertex.add(new Location2DGeo(fin.latitude, fin.longitude));
+			vertex.add(new Location2DGeo(fin.latitude, ini.longitude));
+			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
+			Mapper.Drawables.addLinesGeo(2, vertex, Color.BLACK, PollutionParam.STROKE_POINT);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
 
 	
 	private void spiral(int xini, int yini) {
@@ -160,26 +177,101 @@ public class PollutionThread extends Thread{
         }
 	}
 	
+	public double lookForMax() throws LocationNotReadyException {
+		
+		PointSet points;
+		Iterator<Point> pts;
+		
+		//Set initial measurement location to the grid centre
+		pMax = new Point(sizeX / 2, sizeY / 2);
+		
+		// Initial p1 measurement
+		moveAndRead(pMax);
+		
+		// Initial p2 measurement
+		p2 = new Point(pMax);
+		p2.addY(1);
+		moveAndRead(p2);
+
+		
+		boolean isMax = false;
+		
+		while(!isMax) {
+			/* Run & Tumble */
+			
+			if(p2.getMeasurement() - pMax.getMeasurement() > PollutionParam.pThreshold) { // Run
+				gui.log("Pollution: Run");
+				
+				//We move in the same direction as the pollution has increased
+				pTemp = new Point(pMax);
+				pMax = new Point(p2);
+				p2.add(p2.distVector(pTemp));
+				
+				if(p2.isInside(sizeX, sizeY) && !(visited[p2.getX()][p2.getY()])) {
+					moveAndRead(p2);
+				} else {
+					p2 = new Point(pMax);
+				}
+				
+				
+			} else { // Tumble
+				gui.log("Pollution: Tumble");
+				
+				points = new PointSet();
+				for(int i = -1; i < 2; i++)
+					for(int j = -1; j< 2; j++) {
+						pTemp = new Point(pMax.getX() + i, pMax.getY() + j);
+						if(pTemp.isInside(sizeX, sizeY) && !(visited[pTemp.getX()][pTemp.getY()])) points.add(pTemp);
+					}
+				
+				if(!points.isEmpty()) {
+					pts = points.iterator();
+					// -- Get closest point
+					Point pt, minPt;
+					double dist, minDist;
+					
+					// ---- First element is temporary closest point
+					minPt = pts.next();
+					minDist = p2.distance(minPt);
+					// ---- Iterate through all elements to find closest point
+					while(pts.hasNext()) {
+						pt = pts.next();
+						dist = p2.distance(pt);
+						if (dist < minDist) {
+							minDist = dist;
+							minPt = pt;
+						}
+					}
+					// ---- Read closest point
+					p2 = minPt;
+						moveAndRead(p2);
+				} else {
+					isMax = true;
+				}
+
+			}
+		}
+
+		return pMax.getMeasurement();
+	}
+
 
 	@Override
-	public void run() {		
+	public void run() {
 		// TODO Implement PdUC
 		//long startTime = System.currentTimeMillis();
 		
-		Point p1, p2;
-		double m1, m2;
-		Point pTemp;
+		double mMax;
 		int round, radius;
-		int i, j;
-		PointSet points;
-		Iterator<Point> pts;
-				
-		// Calculate grid size and origin
+
+		// Calculate grid size
 		sizeX = (int) ((double) PollutionParam.width / PollutionParam.density);
 		sizeY = (int) ((double) PollutionParam.length / PollutionParam.density);
 		
 		// new booleans are initialized to false by default, this is what we want
 		visited = new boolean[sizeX][sizeY];
+		
+		drawPerimeter();
 		
 		/* Wait until takeoff has finished */
 		try {
@@ -189,142 +281,19 @@ public class PollutionThread extends Thread{
 			e.printStackTrace();
 		}
 		
-		// Draw perimeter
-		try {
-			Location2DGeo ini = PollutionParam.origin.getGeo();
-			Location2DGeo fin = Location2DUTM.getGeo(PollutionParam.origin.x + PollutionParam.width, PollutionParam.origin.y + PollutionParam.length);
-			List<Location2DGeo> vertex = new ArrayList<>();
-			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
-			vertex.add(new Location2DGeo(ini.latitude, fin.longitude));
-			vertex.add(new Location2DGeo(fin.latitude, fin.longitude));
-			vertex.add(new Location2DGeo(fin.latitude, ini.longitude));
-			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
-			Mapper.Drawables.addLinesGeo(2, vertex, Color.BLACK, PollutionParam.STROKE_POINT);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-		
 		/* Start Algorithm */
-//		gui.log("Start PdUC Algorithm");
-//		
-//		// Set initial measurement location to the grid centre
-//		p1 = new Point(sizeX / 2, sizeY / 2);
-//		
-//		// Initial p1 measurement
-//		try {
-//			m1 = moveAndRead(p1);
-//		} catch (LocationNotReadyException e) {
-//			this.exit(e);
-//			return;
-//		}
-//		
-//		// Initial p2 measurement
-//		p2 = new Point(p1);
-//		p2.addY(1);	
-//		try {
-//			m2 = moveAndRead(p2);
-//		} catch (LocationNotReadyException e) {
-//			this.exit(e);
-//			return;
-//		}
-//		
-//		boolean isMax = false;
-////		boolean found;
-//		//boolean finished = false;
-//
-//		
+		gui.log("Start PdUC Algorithm");
+		
+		try {
+			mMax = lookForMax();
+		} catch (LocationNotReadyException e) {
+			this.exit(e);
+			return;
+		}
+
+		
 //		/* Main loop */
 //		while(!isMax) {
-//			while(!isMax) {
-//				/* Run & Tumble */
-//				
-//				// Pollution + PSO
-//				if(m2 - m1 > PollutionParam.pThreshold) {
-//					// Run
-//					gui.log("Pollution: Run");
-//					pTemp = p1;
-//					p1 = new Point(p2);
-//					p2.add(p2.distVector(pTemp));
-//					
-//					if(p2.isInside(sizeX, sizeY)) {
-//						// Measure next step
-//						try {
-//							m2 = moveAndRead(p2);
-//						} catch (LocationNotReadyException e) {
-//							this.exit(e);
-//							return;
-//						}
-//					} else {
-//						p2 = new Point(p1);
-//						m2 = m1;
-//					}
-//					
-//
-//					
-//				} else {
-//					// Tumble
-//					gui.log("Pollution: Tumble");
-////					found = false;
-//					
-//					points = new PointSet();
-//					for(i = -1; i < 2; i++)
-//						for(j = -1; j< 2; j++) {
-//							pTemp = new Point(p1.getX() + i, p1.getY() + j);
-//							if(pTemp.isInside(sizeX, sizeY) && !(visited[pTemp.getX()][pTemp.getY()])) points.add(pTemp);
-//						}
-//					
-//					if(!points.isEmpty()) {
-//						pts = points.iterator();
-//						
-//						// -- Get closest point
-//						Point pt, minPt;
-//						double dist, minDist;
-//						
-//						// ---- First element is temporary closest point
-//						minPt = pts.next();
-//						minDist = p2.distance(minPt);
-//						// ---- Iterate through all elements to find closest point
-//						while(pts.hasNext()) {
-//							pt = pts.next();
-//							dist = p2.distance(pt);
-//							//GUI	.log(pt.toString() + " > " + dist);
-//							if (dist < minDist) {
-//								minDist = dist;
-//								minPt = pt;
-//							}
-//						}
-//						
-//						// ---- Read closest point
-//						p2 = minPt;
-//						try {
-//							m2 = moveAndRead(p2);
-//						} catch (LocationNotReadyException e) {
-//							this.exit(e);
-//							return;
-//						}
-//					} else {
-//						isMax = true;
-//					}
-//					
-//					
-//					
-////					for(i = -1; i < 2 && !found; i++)
-////						for(j = -1; j< 2 && !found; j++) {
-////							pTemp = new Point(p1.getX() + i, p1.getY() + j);
-////							//GUI.log("\t" + pTemp);
-////							if(!(visited[pTemp.getX()][pTemp.getY()]) && pTemp.isInside(sizeX, sizeY)) {
-////								p2 = pTemp;
-////								found = true;
-////								//GUI.log("\tFound");
-////								// Measure next step
-////								m2 = moveAndRead(p2);
-////							}
-////						}
-////					if(!found) {
-////						isMax = true;
-////					}
-//				}
-//			} 
 //			
 //			/* Explore fase */
 //			gui.log("Explore - Start");
@@ -421,7 +390,7 @@ public class PollutionThread extends Thread{
 		
 		
 		
-		spiral(sizeX / 2, sizeY / 2);
+		//spiral(sizeX / 2, sizeY / 2);
 		
 		endExperiment();
 	}

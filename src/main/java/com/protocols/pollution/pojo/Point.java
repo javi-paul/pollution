@@ -1,12 +1,13 @@
 package com.protocols.pollution.pojo;
 
 /**
- * Represents a 2d point on a grid.
- * @author Carlos Martínez Úbeda
+ * Represents a 2d point on a grid that contains data.
+ * @author Carlos Martínez Úbeda, Javier Paul Minguez
  *
  */
 public class Point {
 	int x, y;
+	double measurement;
 	
 	public Point(int x, int y) {
 		this.x = x;
@@ -20,6 +21,7 @@ public class Point {
 	public Point(Point point) {
 		this.x = point.x;
 		this.y = point.y;
+		this.measurement = point.measurement;
 	}
 	
 	/**
@@ -103,6 +105,19 @@ public class Point {
 	 */
 	public void setY(int y) {
 		this.y = y;
+	}
+	
+	/**
+	 * @return The measurement
+	 */
+	public double getMeasurement() {
+		return measurement;
+	}
+	/**
+	 * @param measurement The measurement to set
+	 */
+	public void setMeasurement(double measurement) {
+		this.measurement = measurement;
 	}
 
 	/**
