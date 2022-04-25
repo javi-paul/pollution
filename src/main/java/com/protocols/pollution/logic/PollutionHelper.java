@@ -102,8 +102,9 @@ public class PollutionHelper extends ProtocolHelper {
 		PollutionParam.origin.y -= PollutionParam.length/2.0;
 		
 		// Measurement structure
-		PollutionParam.measurements_set = new ValueSet();
-		PollutionParam.measurements = new SparseDataset();
+		//PollutionParam.measurements_set = new ValueSet();
+		//PollutionParam.measurements = new SparseDataset();
+		
 		
 		PollutionParam.ready = false;
 	}

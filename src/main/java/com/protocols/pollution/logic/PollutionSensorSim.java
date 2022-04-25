@@ -60,7 +60,7 @@ public class PollutionSensorSim implements PollutionSensor {
 		Location2DUTM startLocation = PollutionParam.origin;
 		int pointX =  (int) Math.round((location.x - startLocation.x) / PollutionParam.width * data[0].length);;
 		int pointY = (int) Math.round((location.y - startLocation.y) / PollutionParam.length * data.length);
-		return (data[pointX][pointY] -300) * 2;
+		return ((double)((int) ((data[pointX][pointY] -300) * 20))) / 10;
 	}
 
 }

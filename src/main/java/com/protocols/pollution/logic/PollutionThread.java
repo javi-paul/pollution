@@ -21,6 +21,9 @@ import com.protocols.pollution.pojo.PointSet;
 import com.protocols.pollution.pojo.Value;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -72,14 +75,16 @@ public class PollutionThread extends Thread{
 		double m;
 		move(p);
 		m = PollutionParam.sensor.read();
-		synchronized(PollutionParam.measurements_set) {
+		/*synchronized(PollutionParam.measurements_set) {
 			PollutionParam.measurements.set(p.getX(), p.getY(), m);
 
 			PollutionParam.measurements_set.add(new Value(p.getX(), p.getY(), m));
 			if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
 				this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
 			}
-		}
+		}*/
+		
+		PollutionParam.data[p.getX()][p.getY()] = m;
 		visited[p.getX()][p.getY()] = true;
 		p.setMeasurement(m);
 		gui.log("Read: " + p.toString());
@@ -252,6 +257,8 @@ public class PollutionThread extends Thread{
 
 		// new booleans are initialized to false by default, this is what we want
 		visited = new boolean[sizeX][sizeY];
+		
+		PollutionParam.data = new double[sizeX][sizeY];
 		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
 			drawPerimeter();
 		}
@@ -289,6 +296,30 @@ public class PollutionThread extends Thread{
 			this.exit(e);
 			return;
 		}
+		
+		//TODO - Log method
+		
+		System.out.println("log method");
+		String strout = "";
+		try {
+			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results" + java.time.LocalDateTime.now() + ".log"));
+			for (int i = 0; i < PollutionParam.data.length; i++) {
+				strout = "";
+				for (int j = 0; j < PollutionParam.data[0].length; j++) {
+					strout += PollutionParam.data[j][i] + " ";
+				}
+				byte[] print = (strout + "\n").getBytes();
+				fis.write(print);
+			}
+			fis.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		
+		
 		endExperiment("Experiment ended.");
 	}
 

@@ -20,7 +20,7 @@ public class PollutionParam {
 	public static double InitialYaw = 0.0;				// (rad) Initial heading for simulations
 	
 	
-	public static double altitude = 15;  //To be prompted with GUI
+	public static double altitude = 5;  //To be prompted with GUI
 	public static int width = 200;		//To be prompted with GUI
 	public static int length = 200;	//To be prompted with GUI
 	public static double density = 5;	//To be prompted with GUI
@@ -29,9 +29,10 @@ public class PollutionParam {
 	public static String pollutionDataFile = "/home/jav/data.txt";		
 	public static PollutionSensor sensor;
 	public static volatile boolean ready;	//True when the UAV takes off
-	public static SparseDataset measurements;
+	//public static SparseDataset measurements;
 	public static final double pThreshold = 5.0;
-	public static ValueSet measurements_set;
+	//public static ValueSet measurements_set;
+	public static double[][] data;
 	
 	public static final Stroke STROKE_POINT = new BasicStroke(1f);
 	
