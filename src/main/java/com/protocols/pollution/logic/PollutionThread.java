@@ -8,7 +8,6 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3D;
 import es.upv.grc.mapper.LocationNotReadyException;
 import es.upv.grc.mapper.Mapper;
-import smile.data.SparseDataset;
 
 import com.api.ArduSim;
 import com.api.Copter;
@@ -186,8 +185,9 @@ public class PollutionThread extends Thread{
 					newMax = true;
 				}
 			}
-			//markExploredArea(radius, skip);
-			
+			if(points.isEmpty()) {
+				markExploredArea(radius, skip);
+			}
 			if(newMax) {
 				// Set pMax to pCurrent, keep both the same so algorithm goes to tumble on next step
 				pMax = new DataPoint(pCurrent);
@@ -223,41 +223,21 @@ public class PollutionThread extends Thread{
 	private PointSet generatePointsExplore(int radius, int skip) {
 		PointSet setToPoblate = new PointSet();
 		Point pTemp;
-       /* // -- Generate corner points
-        pTemp = new Point(pMax).add(radius, radius); // Top-right
-        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-        pTemp = new Point(pMax).add(-radius, radius); // Top-left
-        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-        pTemp = new Point(pMax).add(radius, -radius); // Bottom-right
-        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-        pTemp = new Point(pMax).add(-radius, -radius); // Bottom-left
-        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);*/
-        
-        // -- Generate points (except corners)
-        for(int i = (-radius); i <= radius; i+= skip) {
-            pTemp = new Point(pMax).add(i, radius); // Top
+       
+        for(int i = (-radius); i < radius; i+= skip) {
+            pTemp = new Point(pMax).add(i, radius); // Top  //-r +r
+            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp); 
+            pTemp = new Point(pMax).add(-i, -radius); // Bottom  +r -r
             if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-            pTemp = new Point(pMax).add(i, -radius); // Bottom
+            pTemp = new Point(pMax).add(-radius, i); // Left  -r -r
             if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-            pTemp = new Point(pMax).add(-radius, i); // Left
-            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-            pTemp = new Point(pMax).add(radius, i); // Right
+            pTemp = new Point(pMax).add(radius, -i); // Right +r +r
             if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
         }
         return setToPoblate;
 	}
 
-	private void markExploredArea(int radius, int skip) { //TODO
-		
-		boolean top = true, bot = true, left = true, right = true;
-		
-		for(int i = (-radius); i <= radius; i+= skip) {
-			top = top && visited[pMax.getX() + i][pMax.getY() + radius];
-			bot = bot && visited[pMax.getX() + i][pMax.getY() - radius];
-			left = left && visited[pMax.getX() - radius][pMax.getY() + i];
-			right = right && visited[pMax.getX() + radius][pMax.getY() + i];
-		}
-		
+	private void markExploredArea(int radius, int skip) {
 		//We mark the whole area as visited
 		for(int i = (pMax.getX() -radius) >= 0 ? pMax.getX() -radius : 0; i < ((pMax.getX() + radius) < sizeX ? pMax.getX() + radius : sizeX - 1); i++)
 			for(int j = (pMax.getY() - radius) >= 0 ? pMax.getY() -radius : 0; j < ((pMax.getY() + radius) < sizeY ? pMax.getY() + radius : sizeY - 1); j++)

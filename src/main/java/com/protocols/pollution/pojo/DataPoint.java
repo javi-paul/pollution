@@ -27,7 +27,7 @@ public class DataPoint extends Point{
 	 * @return The serialised data.
 	 */
 	public String toString() {
-		return super.toString() +" = " + measurement;
+		return super.toString() + " = " + measurement;
 	}
 	
 	/**

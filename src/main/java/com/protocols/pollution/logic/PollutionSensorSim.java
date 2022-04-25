@@ -55,7 +55,6 @@ public class PollutionSensorSim implements PollutionSensor {
 
 	@Override
 	public double read() {
-		// TODO 
 		//return Math.random() * 100;
 		Location2DUTM location = API.getCopter(0).getLocationUTM();
 		Location2DUTM startLocation = PollutionParam.origin;

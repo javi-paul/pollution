@@ -21,9 +21,9 @@ public class PollutionParam {
 	
 	
 	public static double altitude = 15;  //To be prompted with GUI
-	public static int width = 400;		//To be prompted with GUI
-	public static int length = 400;	//To be prompted with GUI
-	public static double density = 10;	//To be prompted with GUI
+	public static int width = 200;		//To be prompted with GUI
+	public static int length = 200;	//To be prompted with GUI
+	public static double density = 5;	//To be prompted with GUI
 	public static Location2DUTM origin;	//Starting origin is formed with InitialLatitude and InitialLongitude
 	public static boolean isSimulation = true;	//TODO
 	public static String pollutionDataFile = "/home/jav/data.txt";		
