@@ -16,6 +16,7 @@ import com.api.GUI;
 import com.api.MoveTo;
 import com.api.MoveToListener;
 import com.api.pojo.FlightMode;
+import com.protocols.pollution.pojo.DataPoint;
 import com.protocols.pollution.pojo.Point;
 import com.protocols.pollution.pojo.PointSet;
 import com.protocols.pollution.pojo.Value;
@@ -28,15 +29,13 @@ import java.util.List;
 /** Developed by: Javier Paul Minguez (Valencia, Spain). */
 
 public class PollutionThread extends Thread{
-
-	private boolean [][] visited;
-
-	private int sizeX, sizeY;
-
+	
 	private final Copter copter;
 	private final GUI gui;
 
-	private Point pMax, pCurrent;
+	private boolean [][] visited;
+	private int sizeX, sizeY;
+	private DataPoint pMax, pCurrent;
 
 	public PollutionThread() {
 		this.copter = API.getCopter(0);
@@ -50,20 +49,19 @@ public class PollutionThread extends Thread{
 	private void move(int x, int y) throws LocationNotReadyException {
 		Double xTarget = PollutionParam.origin.x + (x * PollutionParam.density);
 		Double yTarget = PollutionParam.origin.y + (y * PollutionParam.density);
-		//gui.log("moving to " + xTarget + " " + yTarget);
-		MoveTo moveTo = copter.moveTo(new Location3D(xTarget, yTarget, PollutionParam.altitude), new MoveToListener() {
 
+		MoveTo moveTo = copter.moveTo(new Location3D(xTarget, yTarget, PollutionParam.altitude), new MoveToListener() {
 			@Override
 			public void onFailure() {
-				// TODO
 				gui.log("error on method move");
+				endExperiment("Copter is unable to move.");
 			}
-
 			@Override
 			public void onCompleteActionPerformed() {
 				// Not necessary because we wait for the thread to finish
 			}
 		});
+		
 		moveTo.start();
 		try {
 			moveTo.join();
@@ -71,7 +69,7 @@ public class PollutionThread extends Thread{
 
 	}
 
-	private void moveAndRead(Point p) throws LocationNotReadyException {
+	private void moveAndRead(DataPoint p) throws LocationNotReadyException {
 		double m;
 		move(p);
 		m = PollutionParam.sensor.read();
@@ -80,13 +78,12 @@ public class PollutionThread extends Thread{
 
 			PollutionParam.measurements_set.add(new Value(p.getX(), p.getY(), m));
 			if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
-
 				this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
 			}
 		}
 		visited[p.getX()][p.getY()] = true;
-		gui.log("Read: [" + p.getX() + ", " + p.getY() + "] = " + m);
 		p.setMeasurement(m);
+		gui.log("Read: " + p.toString());
 	}
 
 	private void drawPoint(Point p, double measure, double min, double max) {
@@ -116,68 +113,7 @@ public class PollutionThread extends Thread{
 		}
 	}
 
-	private void spiral(int xini, int yini) {
-		int xpos = xini;
-		int ypos = yini;
-		int maxRadius = 0;
-		boolean circle = false;
-		boolean border = false;
-		int dx = 1;
-		int dy = 0;
-		for (int i = 1; xpos <= sizeX-1 && xpos >= 0 && ypos <= sizeY -1 && ypos >= 0; i++) {
-			//System.out.println("------Bucle i" + i);
-			circle = false;
-			maxRadius += i;
-			if (!border){
-				dx = 1;
-				dy = 0;
-			}
-			for (int j = 1; !circle; j++) {
-
-				int xrad = xpos - xini;
-				int yrad = ypos - yini;
-
-				//if (!border) {
-				if (Math.abs(xrad) < maxRadius) {
-					dy = 0;
-				} else if (Math.abs(yrad) < maxRadius && xrad > 0) {
-					dy = 1;
-					dx = 0;
-				} else if (Math.abs(yrad) < maxRadius && xrad < 0) {
-					dx = 0;
-				} else if (!(xrad == maxRadius && yrad * -1 == maxRadius)) {
-					int aux = dy;
-					dy = dx;
-					dx = aux * -1;
-				} else {
-					circle = true;
-				}
-				// } else {
-				//     System.out.println("##################");
-				//     int aux = dy;
-				//     dy = dx;
-				//     dx = aux;
-				//     border = false;
-				// }
-				xpos += dx;
-				ypos += dy;
-				try {
-					moveAndRead(new Point(xpos,ypos));
-				} catch (Exception e) {
-					gui.log("jaja la liaste" + e.getMessage());
-				} 
-
-				if (xpos >= sizeX - 1 || xpos < 0 || ypos >= sizeY - 1 || ypos < 0) {
-					circle = true;
-					//    border = true;
-				}
-			}
-
-		}
-	}
-
 	private void runAndTumble() throws LocationNotReadyException {
-
 		Point pTemp;
 		PointSet points = new PointSet();
 
@@ -189,19 +125,19 @@ public class PollutionThread extends Thread{
 
 				//We move in the same direction as the pollution has increased 
 				pTemp = new Point(pMax);
-				pMax = new Point(pCurrent);
+				pMax = new DataPoint(pCurrent);
 				pCurrent.add(pCurrent.distVector(pTemp));
 				points = new PointSet();
 
 				if(pCurrent.isInside(sizeX, sizeY) && !(visited[pCurrent.getX()][pCurrent.getY()])) {
 					moveAndRead(pCurrent);
 				} else {
-					pCurrent = new Point(pMax);
+					pCurrent = new DataPoint(pMax);
 				}
 			} else { // Tumble
 				gui.log("Pollution: Tumble");
 
-				//We create the points that we need to visit
+				//We create the points that we need to visit in tumble phase
 				if(points.isEmpty()) {
 					for(int i = -1; i < 2; i++)
 						for(int j = -1; j< 2; j++) {
@@ -225,30 +161,19 @@ public class PollutionThread extends Thread{
 		// Initial round. Initial radius = 3 to take into account Tumble
 		int skip = 2;
 		int radius = 3;
-		PointSet points = new PointSet();
-		Point pTemp;
+		PointSet points;
 
-		/* Explore fase */
+		/* Explore phase */
 		gui.log("Explore - Start");
 
 		boolean newMax = false;
-		// Measure until radius covers all the grid
+		// Measure until radius covers all the grid or a new max is found
 		while(!newMax && (radius < sizeX || radius < sizeY)) {
 			/* Spiral */
 			gui.log("Explore - Round " + (skip - 1));
 
-			// Generate points for this round
-			for(int i = (-radius); i < radius; i+= skip) {
-				pTemp = new Point(pMax).add(i, radius); // Top
-				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
-				pTemp = new Point(pMax).add(i, -radius); // Bottom
-				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
-				pTemp = new Point(pMax).add(-radius, i); // Left
-				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
-				pTemp = new Point(pMax).add(radius, i); // Right
-				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
-			}
-
+			points = generatePointsExplore(radius, skip);
+	        
 			// Iterate until all points have been visited or a new maximum is found
 			while(!points.isEmpty() && !newMax) {
 				// ---- Read closest point
@@ -259,26 +184,22 @@ public class PollutionThread extends Thread{
 				// ---- If the point is a new max, exit explore and return to run & tumble
 				if(pCurrent.getMeasurement() - pMax.getMeasurement() > PollutionParam.pThreshold) {
 					newMax = true;
-					// Set pMax to pCurrent, keep both the same so algorithm goes to tumble on next step
-					pMax = new Point(pCurrent);
 				}
 			}
+			//markExploredArea(radius, skip);
 			
-			//we mark the whole area as visited
-			
-			for(int i = (pMax.getX() -radius) >= 0 ? pMax.getX() -radius : 0; i < ((pMax.getX() + radius) < sizeX ? pMax.getX() + radius : sizeX - 1); i++)
-				for(int j = (pMax.getY() - radius) >= 0 ? pMax.getY() -radius : 0; j < ((pMax.getY() + radius) < sizeY ? pMax.getY() + radius : sizeY - 1); j++)
-					visited[i][j] = true;
-			
+			if(newMax) {
+				// Set pMax to pCurrent, keep both the same so algorithm goes to tumble on next step
+				pMax = new DataPoint(pCurrent);
+			}
 			radius += skip;
-			skip++;
+			skip++;	
 		}
 		return newMax;
 	}
 
-	private Point findClosestPoint(PointSet points) {
-		Iterator<Point> pts;
-		pts = points.iterator();
+	private DataPoint findClosestPoint(PointSet points) {
+		Iterator<Point> pts = points.iterator();
 
 		// -- Get closest point
 		Point pt, minPt;
@@ -296,23 +217,64 @@ public class PollutionThread extends Thread{
 				minPt = pt;
 			}
 		}
-		return minPt;
+		return new DataPoint(minPt.getX(),minPt.getY());
+	}
+	
+	private PointSet generatePointsExplore(int radius, int skip) {
+		PointSet setToPoblate = new PointSet();
+		Point pTemp;
+       /* // -- Generate corner points
+        pTemp = new Point(pMax).add(radius, radius); // Top-right
+        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+        pTemp = new Point(pMax).add(-radius, radius); // Top-left
+        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+        pTemp = new Point(pMax).add(radius, -radius); // Bottom-right
+        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+        pTemp = new Point(pMax).add(-radius, -radius); // Bottom-left
+        if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);*/
+        
+        // -- Generate points (except corners)
+        for(int i = (-radius); i <= radius; i+= skip) {
+            pTemp = new Point(pMax).add(i, radius); // Top
+            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+            pTemp = new Point(pMax).add(i, -radius); // Bottom
+            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+            pTemp = new Point(pMax).add(-radius, i); // Left
+            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+            pTemp = new Point(pMax).add(radius, i); // Right
+            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+        }
+        return setToPoblate;
 	}
 
+	private void markExploredArea(int radius, int skip) { //TODO
+		
+		boolean top = true, bot = true, left = true, right = true;
+		
+		for(int i = (-radius); i <= radius; i+= skip) {
+			top = top && visited[pMax.getX() + i][pMax.getY() + radius];
+			bot = bot && visited[pMax.getX() + i][pMax.getY() - radius];
+			left = left && visited[pMax.getX() - radius][pMax.getY() + i];
+			right = right && visited[pMax.getX() + radius][pMax.getY() + i];
+		}
+		
+		//We mark the whole area as visited
+		for(int i = (pMax.getX() -radius) >= 0 ? pMax.getX() -radius : 0; i < ((pMax.getX() + radius) < sizeX ? pMax.getX() + radius : sizeX - 1); i++)
+			for(int j = (pMax.getY() - radius) >= 0 ? pMax.getY() -radius : 0; j < ((pMax.getY() + radius) < sizeY ? pMax.getY() + radius : sizeY - 1); j++)
+				visited[i][j] = true;	
+	}
+	
 	@Override
 	public void run() {
-		// TODO Implement PdUC
-		//long startTime = System.currentTimeMillis();
-
 		// Calculate grid size
 		sizeX = (int) ((double) PollutionParam.width / PollutionParam.density);
 		sizeY = (int) ((double) PollutionParam.length / PollutionParam.density);
 
-		System.out.println("X" + sizeX + " Y" + sizeY);
 		// new booleans are initialized to false by default, this is what we want
 		visited = new boolean[sizeX][sizeY];
-
-		drawPerimeter();
+		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
+			drawPerimeter();
+		}
 
 		/* Wait until takeoff has finished */
 		try {
@@ -324,11 +286,11 @@ public class PollutionThread extends Thread{
 
 		/* Start Algorithm */
 		gui.log("Start PdUC Algorithm");
-		//Set initial measurement location to the grid centre
-		pMax = new Point(sizeX / 2, sizeY / 2);
+		//Set initial measurement location to the grid center
+		pMax = new DataPoint(sizeX / 2, sizeY / 2);
 
 		//Make the first move
-		pCurrent = new Point(pMax);
+		pCurrent = new DataPoint(pMax);
 		pCurrent.addY(1);
 		
 		boolean newMax = true;
@@ -336,21 +298,20 @@ public class PollutionThread extends Thread{
 			// Initial pMax and pCurrent measurement
 			moveAndRead(pMax);
 			moveAndRead(pCurrent);
+			//Main loop. It stops when the explore phase finishes without finding a new max
 			while(newMax) {
+				/* Phase 1: Looking for the point with max pollution */
 				runAndTumble();
+				/* Phase 2: Exploring the area surrounding the point with max pollution */
 				newMax = explore();
 			}
 		} catch (LocationNotReadyException e) {
 			this.exit(e);
 			return;
 		}
-
-		//spiral(sizeX / 2, sizeY / 2);
-
-		endExperiment();
+		endExperiment("Experiment ended.");
 	}
 
-	//Private method to return to land and exit from ArduSim
 	private void exit(LocationNotReadyException e) {
 		e.printStackTrace();
 		if (copter.setFlightMode(FlightMode.RTL)) {
@@ -361,11 +322,11 @@ public class PollutionThread extends Thread{
 		gui.exit(e.getMessage());
 	}
 
-	private void endExperiment() {
+	private void endExperiment(String msg) {
 		if (copter.setFlightMode(FlightMode.RTL)) {
-			gui.log("Experiment Ended. Landing...");
+			gui.log(msg + " Landing...");
 		} else {
-			gui.log("Experiment Ended. Unable to return to land.");
+			gui.log(msg + " Unable to return to land.");
 		}
 	}
 

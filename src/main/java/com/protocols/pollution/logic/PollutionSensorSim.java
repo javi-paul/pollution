@@ -17,7 +17,7 @@ public class PollutionSensorSim implements PollutionSensor {
     public PollutionSensorSim() {
     	data = new double[(int)((double) PollutionParam.length / PollutionParam.density)][(int)((double) PollutionParam.width / PollutionParam.density)];
     	
-		try {
+		/*try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(PollutionParam.pollutionDataFile))));
 			String line;
 			String[] tokens;
@@ -26,6 +26,26 @@ public class PollutionSensorSim implements PollutionSensor {
 				tokens = line.split(" ");
 				for (int j = 0; j < data.length; j++) {
 					data[j][i] = Double.parseDouble(tokens[j]);
+				}
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}*/
+    	
+    	try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(PollutionParam.pollutionDataFile))));
+			String line;
+			String[] tokens;
+			int x = 0;
+			for (int i = 0; i < data[0].length; i++) {
+				x = 0;
+				line = reader.readLine();
+				line = reader.readLine();
+				line = reader.readLine();
+				tokens = line.split(" ");
+				for (int j = 0; j < data.length; j++) {
+					data[j][i] = Double.parseDouble(tokens[x]);
+					x += 2;
 				}
 			}
 		} catch (Exception e) {
@@ -41,7 +61,7 @@ public class PollutionSensorSim implements PollutionSensor {
 		Location2DUTM startLocation = PollutionParam.origin;
 		int pointX =  (int) Math.round((location.x - startLocation.x) / PollutionParam.width * data[0].length);;
 		int pointY = (int) Math.round((location.y - startLocation.y) / PollutionParam.length * data.length);
-		return data[pointX][pointY] * 15;
+		return (data[pointX][pointY] -300) * 2;
 	}
 
 }
