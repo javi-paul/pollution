@@ -10,30 +10,25 @@ import java.awt.Stroke;
 
 /** Developed by: Javier Paul Minguez (Valencia, Spain). */
 
-public class PollutionParam {
-	// General parameters
-	public static double StartingAltitude = 15;	// (m) Relative altitude where the UAVs finish the take off process
-	
+public class PollutionParam {	
 	// Simulation parameters
-	public static double InitialLatitude = 39.482594;	// (degrees) Latitude for simulations
-	public static double InitialLongitude = -0.346265;	// (degrees) Longitude for simulations
-	public static double InitialYaw = 0.0;				// (rad) Initial heading for simulations
+	public static double initialLatitude;	// (degrees) Latitude for simulations
+	public static double initialLongitude;	// (degrees) Longitude for simulations
+	public static double initialYaw;	// (rad) Initial heading for simulations
+	public static double altitude;  // (m) altitude of the flight
+	public static int width; // horizontal divisions
+	public static int length; // vertical divisions
+	public static double density; // (m) size of each division
+	public static double pThreshold; // min value when the protocol detects an increment 
+	public static String pollutionDataFile;	// path to the file when the data will be stored at the end of the experiment
 	
-	
-	public static double altitude = 5;  //To be prompted with GUI
-	public static int width = 200;		//To be prompted with GUI
-	public static int length = 200;	//To be prompted with GUI
-	public static double density = 5;	//To be prompted with GUI
-	public static Location2DUTM origin;	//Starting origin is formed with InitialLatitude and InitialLongitude
-	public static boolean isSimulation = true;	//TODO
-	public static String pollutionDataFile = "/home/jav/data.txt";		
+	//For simulation use
+	public static double[][] data;
+	public static final Stroke STROKE_POINT = new BasicStroke(1f);
+	public static Location2DUTM origin;
 	public static PollutionSensor sensor;
 	public static volatile boolean ready;	//True when the UAV takes off
-	//public static SparseDataset measurements;
-	public static final double pThreshold = 5.0;
-	//public static ValueSet measurements_set;
-	public static double[][] data;
-	
-	public static final Stroke STROKE_POINT = new BasicStroke(1f);
+	public static SparseDataset measurements;
+	public static ValueSet measurements_set;
 	
 }

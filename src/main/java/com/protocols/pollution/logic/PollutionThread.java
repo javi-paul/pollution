@@ -75,14 +75,14 @@ public class PollutionThread extends Thread{
 		double m;
 		move(p);
 		m = PollutionParam.sensor.read();
-		/*synchronized(PollutionParam.measurements_set) {
+		synchronized(PollutionParam.measurements_set) {
 			PollutionParam.measurements.set(p.getX(), p.getY(), m);
 
 			PollutionParam.measurements_set.add(new Value(p.getX(), p.getY(), m));
 			if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
 				this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
 			}
-		}*/
+		}
 		
 		PollutionParam.data[p.getX()][p.getY()] = m;
 		visited[p.getX()][p.getY()] = true;
@@ -293,7 +293,9 @@ public class PollutionThread extends Thread{
 				newMax = explore();
 			}
 		} catch (LocationNotReadyException e) {
-			this.exit(e);
+			e.printStackTrace();
+			endExperiment("Unable to calculate the target coordinates.");
+			gui.exit(e.getMessage());
 			return;
 		}
 		
@@ -314,23 +316,11 @@ public class PollutionThread extends Thread{
 			fis.close();
 
 		} catch (IOException e) {
+			//We mostly ignore this
 			e.printStackTrace();
-			System.exit(0);
 		}
-		
-		
 		
 		endExperiment("Experiment ended.");
-	}
-
-	private void exit(LocationNotReadyException e) {
-		e.printStackTrace();
-		if (copter.setFlightMode(FlightMode.RTL)) {
-			gui.log("Landing for being unable to calculate the target coordinates.");
-		} else {
-			gui.log("Unable to return to land.");
-		}
-		gui.exit(e.getMessage());
 	}
 
 	private void endExperiment(String msg) {

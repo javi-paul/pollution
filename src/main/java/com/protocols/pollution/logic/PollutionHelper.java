@@ -14,6 +14,7 @@ import javax.swing.JFrame;
 import org.javatuples.Pair;
 
 import com.api.API;
+import com.api.ArduSim;
 import com.api.ArduSimTools;
 import com.api.Copter;
 import com.api.GUI;
@@ -64,7 +65,6 @@ public class PollutionHelper extends ProtocolHelper {
 	
 	@Override
 	public void configurationCLI() {
-		//TODO: implement in pollutionsimproperties
 		PollutionSimProperties properties = new PollutionSimProperties();
 		ResourceBundle resources;
 		try {
@@ -84,12 +84,17 @@ public class PollutionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void initializeDataStructures() { 
+	public void initializeDataStructures() {
+		configurationCLI();
 		GUI gui = API.getGUI(0);
 		// Sensor setup
 		gui.log("Pollution sensor setup.");
 		try {
-			PollutionParam.sensor = PollutionParam.isSimulation ? new PollutionSensorSim() : null;
+			if (API.getArduSim().getArduSimRole() == ArduSim.MULTICOPTER) {
+				PollutionParam.sensor = null;
+			} else {
+				PollutionParam.sensor = new PollutionSensorSim();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			gui.log("Error loading sensor");
@@ -97,16 +102,17 @@ public class PollutionHelper extends ProtocolHelper {
 		gui.log("Pollution sensor setup done.");
 		
 		// Coordinates setup
-		PollutionParam.origin = new Location2DGeo(PollutionParam.InitialLatitude, PollutionParam.InitialLongitude).getUTM();
+		PollutionParam.origin = new Location2DGeo(PollutionParam.initialLatitude, PollutionParam.initialLongitude).getUTM();
 		PollutionParam.origin.x -= PollutionParam.width/2.0;
 		PollutionParam.origin.y -= PollutionParam.length/2.0;
 		
 		// Measurement structure
-		//PollutionParam.measurements_set = new ValueSet();
-		//PollutionParam.measurements = new SparseDataset();
-		
+		PollutionParam.measurements_set = new ValueSet();
+		PollutionParam.measurements = new SparseDataset();
 		
 		PollutionParam.ready = false;
+		
+		
 	}
 
 	@Override
@@ -116,7 +122,7 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		Location2D masterLocation = new Location2D(PollutionParam.InitialLatitude, PollutionParam.InitialLongitude);
+		Location2D masterLocation = new Location2D(PollutionParam.initialLatitude, PollutionParam.initialLongitude);
 		
 		int numUAVs = API.getArduSim().getNumUAVs();
 		
@@ -124,12 +130,12 @@ public class PollutionHelper extends ProtocolHelper {
 		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
 		Location2DUTM locationUTM;
 
-		startingLocation[0] = Pair.with(masterLocation.getGeoLocation(), PollutionParam.InitialYaw);;
+		startingLocation[0] = Pair.with(masterLocation.getGeoLocation(), PollutionParam.initialYaw);;
 		for (int i = 1; i < numUAVs; i++) {
 			locationUTM = new Location2DUTM(masterLocation.getUTMLocation().x,
 					masterLocation.getUTMLocation().y);
 			try {
-				startingLocation[i] = Pair.with(locationUTM.getGeo(), PollutionParam.InitialYaw);
+				startingLocation[i] = Pair.with(locationUTM.getGeo(), PollutionParam.initialYaw);
 			} catch (LocationNotReadyException e) {
 				e.printStackTrace();
 				API.getGUI(0).exit(e.getMessage());
