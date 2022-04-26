@@ -22,6 +22,7 @@ import com.api.ProtocolHelper;
 import com.api.TakeOff;
 import com.api.TakeOffListener;
 import com.api.pojo.FlightMode;
+import com.protocols.pollution.gui.PollutionDialogApp;
 import com.protocols.pollution.gui.PollutionSimProperties;
 import com.protocols.pollution.pojo.ValueSet;
 import com.setup.Text;
@@ -30,6 +31,8 @@ import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import smile.data.SparseDataset;
 
 
@@ -58,9 +61,7 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public void openConfigurationDialogFX() {
-		//TODO: change this comment when GUI implemented
-		//Platform.runLater(()->new PollutionDialogApp().start(new Stage()));
-		com.setup.Param.simStatus = com.setup.Param.SimulatorState.STARTING_UAVS; 
+		Platform.runLater(()->new PollutionDialogApp().start(new Stage()));
 	}
 	
 	@Override
@@ -85,7 +86,6 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public void initializeDataStructures() {
-		configurationCLI();
 		GUI gui = API.getGUI(0);
 		// Sensor setup
 		gui.log("Pollution sensor setup.");

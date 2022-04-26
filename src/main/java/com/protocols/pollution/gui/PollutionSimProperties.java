@@ -3,23 +3,14 @@ package com.protocols.pollution.gui;
 import com.api.API;
 import com.api.ArduSimTools;
 import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import com.setup.Text;
 import com.api.formations.Formation;
 import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-import com.protocols.followme.logic.FollowMeParam;
-import com.protocols.followme.pojo.RemoteInput;
 import com.protocols.pollution.logic.PollutionParam;
-import com.uavController.UAVParam;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-
-import static com.setup.Param.numUAVs;
 
 public class PollutionSimProperties {
 	
