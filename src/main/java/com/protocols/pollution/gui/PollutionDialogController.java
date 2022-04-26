@@ -91,7 +91,7 @@ public class PollutionDialogController {
 	
 	 private void searchDataFile() {
 	        FileChooser fileChooser = new FileChooser();
-	        fileChooser.setInitialDirectory(new File(API.getFileTools().getResourceFolder().toString()));
+	        fileChooser.setInitialDirectory(new File(API.getFileTools().getResourceFolder().toString() + "/protocols/pollution"));
 	        fileChooser.setTitle("Select the .txt file with the simulation values for the sensor");
 	        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Data txt file", "*.txt");
 	        fileChooser.getExtensionFilters().add(extFilter);

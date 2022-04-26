@@ -16,8 +16,8 @@ public class PollutionParam {
 	public static double initialLongitude;	// (degrees) Longitude for simulations
 	public static double initialYaw;	// (rad) Initial heading for simulations
 	public static double altitude;  // (m) altitude of the flight
-	public static int width; // horizontal divisions
-	public static int length; // vertical divisions
+	public static int width; // (m) horizontal size
+	public static int length; // (m) vertical size
 	public static double density; // (m) size of each division
 	public static double pThreshold; // min value when the protocol detects an increment 
 	public static String pollutionDataFile;	// path to the file when the data will be stored at the end of the experiment

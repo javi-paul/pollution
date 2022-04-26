@@ -80,7 +80,7 @@
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
          <children>
-            <Label prefWidth="150.0" text="Horizontal tiles">
+            <Label prefWidth="150.0" text="Horizontal size">
                <HBox.margin>
                   <Insets right="10.0" />
                </HBox.margin>
@@ -97,7 +97,7 @@
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
          <children>
-            <Label prefWidth="150.0" text="Vertical tiles">
+            <Label prefWidth="150.0" text="Vertical size">
                <HBox.margin>
                   <Insets right="10.0" />
                </HBox.margin>
@@ -114,7 +114,7 @@
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
          <children>
-            <Label prefWidth="150.0" text="Tile size">
+            <Label prefWidth="150.0" text="Size of each division">
                <HBox.margin>
                   <Insets right="10.0" />
                </HBox.margin>
