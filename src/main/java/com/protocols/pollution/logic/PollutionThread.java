@@ -299,31 +299,36 @@ public class PollutionThread extends Thread{
 			return;
 		}
 		
-		//TODO - Log method
 		
-		System.out.println("log method");
-		String strout = "";
-		try {
-			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results" + java.time.LocalDateTime.now() + ".log"));
-			for (int i = 0; i < PollutionParam.data.length; i++) {
-				strout = "";
-				for (int j = 0; j < PollutionParam.data[0].length; j++) {
-					strout += PollutionParam.data[j][i] + " ";
-				}
-				byte[] print = (strout + "\n").getBytes();
-				fis.write(print);
-			}
-			fis.close();
-
-		} catch (IOException e) {
-			//We mostly ignore this
-			e.printStackTrace();
-		}
 		
-		endExperiment("Experiment ended.");
+		endExperiment("Experiment ended successfully.");
 	}
 
+	private void logData(String msg) {
+				System.out.println("Storing data...");
+				String strout = msg;
+				try {
+					FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results" + java.time.LocalDateTime.now() + ".log"));
+					byte[] print = (strout + "\n").getBytes();
+					fis.write(print);
+					for (int i = 0; i < PollutionParam.data.length; i++) {
+						strout = "";
+						for (int j = 0; j < PollutionParam.data[0].length; j++) {
+							strout += PollutionParam.data[j][i] + " ";
+						}
+						print = (strout + "\n").getBytes();
+						fis.write(print);
+					}
+					fis.close();
+
+				} catch (IOException e) {
+					//We mostly ignore this
+					e.printStackTrace();
+				}
+				System.out.println("Data stored.");
+	}
 	private void endExperiment(String msg) {
+		logData(msg);
 		if (copter.setFlightMode(FlightMode.RTL)) {
 			gui.log(msg + " Landing...");
 		} else {

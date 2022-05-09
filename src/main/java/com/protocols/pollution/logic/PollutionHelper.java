@@ -209,7 +209,7 @@ public class PollutionHelper extends ProtocolHelper {
 	@Override
 	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		//TODO: store pollution measurements in a .log file
-		System.out.println("log method");
+		/*System.out.println("log method");
 		try {
 			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results.log"));
 			byte print = Byte.parseByte(PollutionParam.altitude + "");
@@ -219,7 +219,7 @@ public class PollutionHelper extends ProtocolHelper {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);
-		}
+		}*/
 	}
 
 	@Override
