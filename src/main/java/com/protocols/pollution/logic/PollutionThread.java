@@ -27,11 +27,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /** Developed by: Javier Paul Minguez (Valencia, Spain). */
 
 public class PollutionThread extends Thread{
-	
+
 	private final Copter copter;
 	private final GUI gui;
 
@@ -63,7 +64,7 @@ public class PollutionThread extends Thread{
 				// Not necessary because we wait for the thread to finish
 			}
 		});
-		
+
 		moveTo.start();
 		try {
 			moveTo.join();
@@ -75,6 +76,13 @@ public class PollutionThread extends Thread{
 		double m;
 		move(p);
 		m = PollutionParam.sensor.read();
+		try {
+			TimeUnit.MILLISECONDS.sleep((long) (PollutionParam.timeForMeasuring * 1000));
+			gui.log("Waiting for " + PollutionParam.timeForMeasuring + " seconds for the sensor to read");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		synchronized(PollutionParam.measurements_set) {
 			PollutionParam.measurements.set(p.getX(), p.getY(), m);
 
@@ -83,7 +91,7 @@ public class PollutionThread extends Thread{
 				this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
 			}
 		}
-		
+
 		PollutionParam.data[p.getX()][p.getY()] = m;
 		visited[p.getX()][p.getY()] = true;
 		p.setMeasurement(m);
@@ -177,7 +185,7 @@ public class PollutionThread extends Thread{
 			gui.log("Explore - Round " + (skip - 1));
 
 			points = generatePointsExplore(radius, skip);
-	        
+
 			// Iterate until all points have been visited or a new maximum is found
 			while(!points.isEmpty() && !newMax) {
 				// ---- Read closest point
@@ -224,22 +232,22 @@ public class PollutionThread extends Thread{
 		}
 		return new DataPoint(minPt.getX(),minPt.getY());
 	}
-	
+
 	private PointSet generatePointsExplore(int radius, int skip) {
 		PointSet setToPoblate = new PointSet();
 		Point pTemp;
-       
-        for(int i = (-radius); i < radius; i+= skip) {
-            pTemp = new Point(pMax).add(i, radius); // Top  //-r +r
-            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp); 
-            pTemp = new Point(pMax).add(-i, -radius); // Bottom  +r -r
-            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-            pTemp = new Point(pMax).add(-radius, i); // Left  -r -r
-            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-            pTemp = new Point(pMax).add(radius, -i); // Right +r +r
-            if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-        }
-        return setToPoblate;
+
+		for(int i = (-radius); i < radius; i+= skip) {
+			pTemp = new Point(pMax).add(i, radius); // Top  //-r +r
+			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp); 
+			pTemp = new Point(pMax).add(-i, -radius); // Bottom  +r -r
+			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+			pTemp = new Point(pMax).add(-radius, i); // Left  -r -r
+			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+			pTemp = new Point(pMax).add(radius, -i); // Right +r +r
+			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
+		}
+		return setToPoblate;
 	}
 
 	private void markExploredArea(int radius, int skip) {
@@ -248,7 +256,7 @@ public class PollutionThread extends Thread{
 			for(int j = (pMax.getY() - radius) >= 0 ? pMax.getY() -radius : 0; j < ((pMax.getY() + radius) < sizeY ? pMax.getY() + radius : sizeY - 1); j++)
 				visited[i][j] = true;	
 	}
-	
+
 	@Override
 	public void run() {
 		// Calculate grid size
@@ -257,7 +265,7 @@ public class PollutionThread extends Thread{
 
 		// new booleans are initialized to false by default, this is what we want
 		visited = new boolean[sizeX][sizeY];
-		
+
 		PollutionParam.data = new double[sizeX][sizeY];
 		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
 			drawPerimeter();
@@ -279,7 +287,7 @@ public class PollutionThread extends Thread{
 		//Make the first move
 		pCurrent = new DataPoint(pMax);
 		pCurrent.addY(1);
-		
+
 		boolean newMax = true;
 		try {
 			// Initial pMax and pCurrent measurement
@@ -298,34 +306,34 @@ public class PollutionThread extends Thread{
 			gui.exit(e.getMessage());
 			return;
 		}
-		
-		
-		
+
+
+
 		endExperiment("Experiment ended successfully.");
 	}
 
 	private void logData(String msg) {
-				System.out.println("Storing data...");
-				String strout = msg;
-				try {
-					FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results" + java.time.LocalDateTime.now() + ".log"));
-					byte[] print = (strout + "\n").getBytes();
-					fis.write(print);
-					for (int i = 0; i < PollutionParam.data.length; i++) {
-						strout = "";
-						for (int j = 0; j < PollutionParam.data[0].length; j++) {
-							strout += PollutionParam.data[j][i] + " ";
-						}
-						print = (strout + "\n").getBytes();
-						fis.write(print);
-					}
-					fis.close();
-
-				} catch (IOException e) {
-					//We mostly ignore this
-					e.printStackTrace();
+		System.out.println("Storing data...");
+		String strout = msg;
+		try {
+			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results" + java.time.LocalDateTime.now() + ".log"));
+			byte[] print = (strout + "\n").getBytes();
+			fis.write(print);
+			for (int i = 0; i < PollutionParam.data.length; i++) {
+				strout = "";
+				for (int j = 0; j < PollutionParam.data[0].length; j++) {
+					strout += PollutionParam.data[j][i] + " ";
 				}
-				System.out.println("Data stored.");
+				print = (strout + "\n").getBytes();
+				fis.write(print);
+			}
+			fis.close();
+
+		} catch (IOException e) {
+			//We mostly ignore this
+			e.printStackTrace();
+		}
+		System.out.println("Data stored.");
 	}
 	private void endExperiment(String msg) {
 		logData(msg);

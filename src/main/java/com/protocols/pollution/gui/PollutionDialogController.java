@@ -46,6 +46,8 @@ public class PollutionDialogController {
 	@FXML
 	private TextField pThreshold;
 	@FXML
+	private TextField timeForMeasuring;
+	@FXML
 	private TextField pollutionDataFile;
 	@FXML
 	private Button dataFileButton;
@@ -70,6 +72,7 @@ public class PollutionDialogController {
 		pThreshold.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 		width.setTextFormatter(new TextFormatter<>(integerFilter));
 		length.setTextFormatter(new TextFormatter<>(integerFilter));
+		timeForMeasuring.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 		
 		//Data file
 		dataFileButton.setOnAction(e->searchDataFile());

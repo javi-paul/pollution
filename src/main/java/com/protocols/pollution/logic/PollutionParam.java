@@ -30,5 +30,6 @@ public class PollutionParam {
 	public static volatile boolean ready;	//True when the UAV takes off
 	public static SparseDataset measurements;
 	public static ValueSet measurements_set;
+	public static double timeForMeasuring;
 	
 }

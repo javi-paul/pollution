@@ -22,6 +22,7 @@ public class PollutionSimProperties {
 	public int length;
 	public double density;
 	public double pThreshold;
+	public double timeForMeasuring;
 	public String pollutionDataFile;	
 
 	public boolean storeParameters(Properties guiParams, ResourceBundle fileParams) {
@@ -90,6 +91,7 @@ public class PollutionSimProperties {
 		PollutionParam.length = length;
 		PollutionParam.density = density;
 		PollutionParam.pThreshold = pThreshold;
+		PollutionParam.timeForMeasuring = timeForMeasuring;
 		PollutionParam.pollutionDataFile = pollutionDataFile;	
 		
 	}
@@ -100,6 +102,7 @@ public class PollutionSimProperties {
         if(length <= 0) return false;
         if(density <=0) return false;
         if(pThreshold < 0) return false;
+        if(timeForMeasuring < 0) return false;
         if(pollutionDataFile.length() == 0) return false;
 
         return true;
