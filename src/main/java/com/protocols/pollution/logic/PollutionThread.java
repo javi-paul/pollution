@@ -2,7 +2,6 @@ package com.protocols.pollution.logic;
 
 import com.api.API;
 import es.upv.grc.mapper.DrawableSymbol;
-import es.upv.grc.mapper.DrawableSymbolGeo;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3D;
@@ -96,9 +95,9 @@ public class PollutionThread extends Thread{
 	private void drawPoint(DataPoint p, double measure, double min, double max) {
 		Color color = new Color((int) ((measure - min) / (max - min) * 255), 0, 0);
 		try {
-			DrawableSymbolGeo point = Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
-					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT);
-			//point.updateUpRightText(String.format("%.2f", measure));
+			(Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
+					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT))
+			.updateUpRightText(String.format("%.2f", measure));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -1,8 +1,6 @@
 package com.protocols.pollution.logic;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
@@ -33,7 +31,6 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import smile.data.SparseDataset;
 
 
 
