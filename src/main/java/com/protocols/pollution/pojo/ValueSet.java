@@ -15,11 +15,11 @@ public class ValueSet {
 		max = Double.MIN_VALUE;
 	}
 	
-	public void add(Value v) {
-		add(v.getX(), v.getY(), v.getV());
+	public void add(DataPoint v) {
+		add(v.getX(), v.getY(), v.getMeasurement());
 	}
 	
-	public void add(Point p, double c) {
+	public void add(DataPoint p, double c) {
 		add(p.getX(), p.getY(), c);
 	}
 	public void add(int a, int b, double c) {
@@ -29,7 +29,7 @@ public class ValueSet {
 		if (c > max) max = c;
 	}
 	
-	public boolean contains(Point p) {
+	public boolean contains(DataPoint p) {
 		return contains(p.getX(), p.getY());
 	}
 	public boolean contains(int a, int b) {
@@ -37,7 +37,7 @@ public class ValueSet {
 		return false;
 	}
 	
-	public void remove(Point p) {
+	public void remove(DataPoint p) {
 		remove(p.getX(), p.getY());
 	}
 	public void remove(int a, int b) {
@@ -47,8 +47,8 @@ public class ValueSet {
 		}
 	}
 	
-	public Value[] toArray() {
-		ArrayList<Value> al = new ArrayList<>();
+	public DataPoint[] toArray() {
+		ArrayList<DataPoint> al = new ArrayList<>();
 		
 		Iterator<Integer> i1 = pSet.keySet().iterator();
 		int e;
@@ -60,10 +60,10 @@ public class ValueSet {
 			i2 = pSet.get(e).entrySet().iterator();
 			while(i2.hasNext()) {
 				e2 = i2.next();
-				al.add(new Value(e, e2.getKey(), e2.getValue()));
+				al.add(new DataPoint(e, e2.getKey(), e2.getValue()));
 			}
 		}
-		return al.toArray(new Value[0]);
+		return al.toArray(new DataPoint[0]);
 	}
 	
 	@Override
@@ -71,7 +71,7 @@ public class ValueSet {
 		return Arrays.deepToString(this.toArray());
 	}
 	
-	public Iterator<Value> iterator() {
+	public Iterator<DataPoint> iterator() {
 		return new Itr();
 	}
 
@@ -83,7 +83,7 @@ public class ValueSet {
 		return max;
 	}
 	
-	private class Itr implements Iterator<Value> {
+	private class Itr implements Iterator<DataPoint> {
 		Iterator<Integer> itA;
 		Iterator<Entry<Integer, Double>> itB;
 		int a;
@@ -114,18 +114,22 @@ public class ValueSet {
 		}
 
 		@Override
-		public Value next() {
+		public DataPoint next() {
 			while(!itB.hasNext() && itA.hasNext()) {
 				a = itA.next();
 				itB = pSet.get(a).entrySet().iterator();
 			}
 			if(itB.hasNext()) {
 				e = itB.next();
-				return new Value(a, e.getKey(), e.getValue());
+				return new DataPoint(a, e.getKey(), e.getValue());
 			}
 			return null;
 		}
 		
+	}
+	
+	public boolean isEmpty() {
+		return pSet.isEmpty();
 	}
 	
 }

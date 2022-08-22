@@ -108,7 +108,6 @@ public class PollutionHelper extends ProtocolHelper {
 		
 		// Measurement structure
 		PollutionParam.measurements_set = new ValueSet();
-		PollutionParam.measurements = new SparseDataset();
 		
 		PollutionParam.ready = false;
 		
@@ -208,18 +207,7 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public void logData(String folder, String baseFileName, long baseNanoTime) {
-		//TODO: store pollution measurements in a .log file
-		/*System.out.println("log method");
-		try {
-			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results.log"));
-			byte print = Byte.parseByte(PollutionParam.altitude + "");
-			fis.write(print);
-			fis.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}*/
+		//this is managed in the PollutionThread class
 	}
 
 	@Override

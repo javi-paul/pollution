@@ -21,6 +21,7 @@ public class PollutionParam {
 	public static double density; // (m) size of each division
 	public static double pThreshold; // min value when the protocol detects an increment 
 	public static String pollutionDataFile;	// path to the file when the data will be stored at the end of the experiment
+	public static double timeForMeasuring; //(s) time needed for the sensor to measure
 	
 	//For simulation use
 	public static double[][] data;
@@ -28,8 +29,7 @@ public class PollutionParam {
 	public static Location2DUTM origin;
 	public static PollutionSensor sensor;
 	public static volatile boolean ready;	//True when the UAV takes off
-	public static SparseDataset measurements;
 	public static ValueSet measurements_set;
-	public static double timeForMeasuring;
+
 	
 }

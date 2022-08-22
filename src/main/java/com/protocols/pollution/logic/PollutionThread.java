@@ -16,9 +16,7 @@ import com.api.MoveTo;
 import com.api.MoveToListener;
 import com.api.pojo.FlightMode;
 import com.protocols.pollution.pojo.DataPoint;
-import com.protocols.pollution.pojo.Point;
-import com.protocols.pollution.pojo.PointSet;
-import com.protocols.pollution.pojo.Value;
+import com.protocols.pollution.pojo.ValueSet;
 
 import java.awt.Color;
 import java.io.File;
@@ -46,7 +44,7 @@ public class PollutionThread extends Thread{
 	}
 
 	// Move to a point within the grid
-	private void move(Point p) throws LocationNotReadyException {
+	private void move(DataPoint p) throws LocationNotReadyException {
 		move(p.getX(), p.getY());
 	}
 	private void move(int x, int y) throws LocationNotReadyException {
@@ -80,13 +78,10 @@ public class PollutionThread extends Thread{
 			TimeUnit.MILLISECONDS.sleep((long) (PollutionParam.timeForMeasuring * 1000));
 			gui.log("Waiting for " + PollutionParam.timeForMeasuring + " seconds for the sensor to read");
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		synchronized(PollutionParam.measurements_set) {
-			PollutionParam.measurements.set(p.getX(), p.getY(), m);
-
-			PollutionParam.measurements_set.add(new Value(p.getX(), p.getY(), m));
+			PollutionParam.measurements_set.add(new DataPoint(p.getX(), p.getY(), m));
 			if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
 				this.drawPoint(p, m, PollutionParam.measurements_set.getMin(), PollutionParam.measurements_set.getMax());
 			}
@@ -98,12 +93,12 @@ public class PollutionThread extends Thread{
 		gui.log("Read: " + p.toString());
 	}
 
-	private void drawPoint(Point p, double measure, double min, double max) {
+	private void drawPoint(DataPoint p, double measure, double min, double max) {
 		Color color = new Color((int) ((measure - min) / (max - min) * 255), 0, 0);
 		try {
 			DrawableSymbolGeo point = Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
 					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT);
-			point.updateUpRightText(String.format("%.2f", measure));
+			//point.updateUpRightText(String.format("%.2f", measure));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -126,8 +121,8 @@ public class PollutionThread extends Thread{
 	}
 
 	private void runAndTumble() throws LocationNotReadyException {
-		Point pTemp;
-		PointSet points = new PointSet();
+		DataPoint pTemp;
+		ValueSet points = new ValueSet();
 
 		boolean finished = false;
 		while(!finished) {
@@ -136,10 +131,10 @@ public class PollutionThread extends Thread{
 				gui.log("Pollution: Run");
 
 				//We move in the same direction as the pollution has increased 
-				pTemp = new Point(pMax);
+				pTemp = new DataPoint(pMax);
 				pMax = new DataPoint(pCurrent);
 				pCurrent.add(pCurrent.distVector(pTemp));
-				points = new PointSet();
+				points = new ValueSet();
 
 				if(pCurrent.isInside(sizeX, sizeY) && !(visited[pCurrent.getX()][pCurrent.getY()])) {
 					moveAndRead(pCurrent);
@@ -153,7 +148,7 @@ public class PollutionThread extends Thread{
 				if(points.isEmpty()) {
 					for(int i = -1; i < 2; i++)
 						for(int j = -1; j< 2; j++) {
-							pTemp = new Point(pMax.getX() + i, pMax.getY() + j);
+							pTemp = new DataPoint(pMax.getX() + i, pMax.getY() + j);
 							if(pTemp.isInside(sizeX, sizeY) && !(visited[pTemp.getX()][pTemp.getY()])) points.add(pTemp);
 						}
 				}
@@ -173,7 +168,7 @@ public class PollutionThread extends Thread{
 		// Initial round. Initial radius = 3 to take into account Tumble
 		int skip = 2;
 		int radius = 3;
-		PointSet points;
+		ValueSet points;
 
 		/* Explore phase */
 		gui.log("Explore - Start");
@@ -211,11 +206,11 @@ public class PollutionThread extends Thread{
 		return newMax;
 	}
 
-	private DataPoint findClosestPoint(PointSet points) {
-		Iterator<Point> pts = points.iterator();
+	private DataPoint findClosestPoint(ValueSet points) {
+		Iterator<DataPoint> pts = points.iterator();
 
 		// -- Get closest point
-		Point pt, minPt;
+		DataPoint pt, minPt;
 		double dist, minDist;
 
 		// ---- First element is temporary closest point
@@ -233,18 +228,18 @@ public class PollutionThread extends Thread{
 		return new DataPoint(minPt.getX(),minPt.getY());
 	}
 
-	private PointSet generatePointsExplore(int radius, int skip) {
-		PointSet setToPoblate = new PointSet();
-		Point pTemp;
+	private ValueSet generatePointsExplore(int radius, int skip) {
+		ValueSet setToPoblate = new ValueSet();
+		DataPoint pTemp;
 
 		for(int i = (-radius); i < radius; i+= skip) {
-			pTemp = new Point(pMax).add(i, radius); // Top  //-r +r
+			pTemp = new DataPoint(pMax).add(i, radius); // Top  //-r +r
 			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp); 
-			pTemp = new Point(pMax).add(-i, -radius); // Bottom  +r -r
+			pTemp = new DataPoint(pMax).add(-i, -radius); // Bottom  +r -r
 			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-			pTemp = new Point(pMax).add(-radius, i); // Left  -r -r
+			pTemp = new DataPoint(pMax).add(-radius, i); // Left  -r -r
 			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
-			pTemp = new Point(pMax).add(radius, -i); // Right +r +r
+			pTemp = new DataPoint(pMax).add(radius, -i); // Right +r +r
 			if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) setToPoblate.add(pTemp);
 		}
 		return setToPoblate;
@@ -314,19 +309,21 @@ public class PollutionThread extends Thread{
 
 	private void logData(String msg) {
 		System.out.println("Storing data...");
-		String strout = msg;
 		try {
 			FileOutputStream fis = new FileOutputStream(new File("/home/jav/Documents/results" + java.time.LocalDateTime.now() + ".log"));
-			byte[] print = (strout + "\n").getBytes();
-			fis.write(print);
-			for (int i = 0; i < PollutionParam.data.length; i++) {
-				strout = "";
+			fis.write((msg + "\n").getBytes());
+			DataPoint pointsMeasured[] = PollutionParam.measurements_set.toArray();
+			for (DataPoint i : pointsMeasured) {
+				fis.write((i.toString() + "\n").getBytes());
+			}
+			/*for (int i = 0; i < PollutionParam.data.length; i++) {
+				strout = "[";
 				for (int j = 0; j < PollutionParam.data[0].length; j++) {
-					strout += PollutionParam.data[j][i] + " ";
+					strout += j + ", " + i + ", " + PollutionParam.data[j][i] + "]";
 				}
 				print = (strout + "\n").getBytes();
 				fis.write(print);
-			}
+			}*/
 			fis.close();
 
 		} catch (IOException e) {
