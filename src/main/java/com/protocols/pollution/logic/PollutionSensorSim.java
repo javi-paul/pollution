@@ -30,7 +30,7 @@ public class PollutionSensorSim implements PollutionSensor {
 			}
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-		}*/
+		} */
     	
     	try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(PollutionParam.pollutionDataFile))));

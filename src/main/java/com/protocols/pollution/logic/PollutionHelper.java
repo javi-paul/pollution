@@ -193,7 +193,6 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public String getExperimentResults() {
-		//TODO: Show pollution measurements
 		return null;
 	}
 

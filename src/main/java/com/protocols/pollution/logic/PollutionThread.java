@@ -2,6 +2,7 @@ package com.protocols.pollution.logic;
 
 import com.api.API;
 import es.upv.grc.mapper.DrawableSymbol;
+import es.upv.grc.mapper.DrawableSymbolGeo;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3D;
@@ -72,13 +73,13 @@ public class PollutionThread extends Thread{
 	private void moveAndRead(DataPoint p) throws LocationNotReadyException {
 		double m;
 		move(p);
-		m = PollutionParam.sensor.read();
 		try {
 			TimeUnit.MILLISECONDS.sleep((long) (PollutionParam.timeForMeasuring * 1000));
 			gui.log("Waiting for " + PollutionParam.timeForMeasuring + " seconds for the sensor to read");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		m = PollutionParam.sensor.read();
 		synchronized(PollutionParam.measurements_set) {
 			PollutionParam.measurements_set.add(new DataPoint(p.getX(), p.getY(), m));
 			if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR_GUI) {
@@ -95,9 +96,9 @@ public class PollutionThread extends Thread{
 	private void drawPoint(DataPoint p, double measure, double min, double max) {
 		Color color = new Color((int) ((measure - min) / (max - min) * 255), 0, 0);
 		try {
-			(Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
-					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT))
-			.updateUpRightText(String.format("%.2f", measure));
+			DrawableSymbolGeo point = (Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
+					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT));
+			//.updateUpRightText(String.format("%.2f", measure));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -106,7 +107,7 @@ public class PollutionThread extends Thread{
 	private void drawPerimeter() {
 		try {
 			Location2DGeo ini = PollutionParam.origin.getGeo();
-			Location2DGeo fin = Location2DUTM.getGeo(PollutionParam.origin.x + PollutionParam.width, PollutionParam.origin.y + PollutionParam.length);
+			Location2DGeo fin = Location2DUTM.getGeo(PollutionParam.origin.x + PollutionParam.width - PollutionParam.density, PollutionParam.origin.y + PollutionParam.length - PollutionParam.density);
 			List<Location2DGeo> vertex = new ArrayList<>();
 			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
 			vertex.add(new Location2DGeo(ini.latitude, fin.longitude));
@@ -142,22 +143,16 @@ public class PollutionThread extends Thread{
 				}
 			} else { // Tumble
 				gui.log("Pollution: Tumble");
-
-				//We create the points that we need to visit in tumble phase
+				
+				points = generatePoints(1, 1);
+				
 				if(points.isEmpty()) {
-					for(int i = -1; i < 2; i++)
-						for(int j = -1; j< 2; j++) {
-							pTemp = new DataPoint(pMax.getX() + i, pMax.getY() + j);
-							if(pTemp.isInside(sizeX, sizeY) && !(visited[pTemp.getX()][pTemp.getY()])) points.add(pTemp);
-						}
-				}
-				if(!points.isEmpty()) {
+					finished = true;
+				} else {
 					// ---- Read closest point
 					pCurrent = findClosestPoint(points);
 					moveAndRead(pCurrent);
 					points.remove(pCurrent);
-				} else {
-					finished = true;
 				}
 			}
 		}
@@ -178,7 +173,7 @@ public class PollutionThread extends Thread{
 			/* Spiral */
 			gui.log("Explore - Round " + (skip - 1));
 
-			points = generatePointsExplore(radius, skip);
+			points = generatePoints(radius, skip);
 
 			// Iterate until all points have been visited or a new maximum is found
 			while(!points.isEmpty() && !newMax) {
@@ -227,7 +222,7 @@ public class PollutionThread extends Thread{
 		return new DataPoint(minPt.getX(),minPt.getY());
 	}
 
-	private ValueSet generatePointsExplore(int radius, int skip) {
+	private ValueSet generatePoints(int radius, int skip) {
 		ValueSet setToPoblate = new ValueSet();
 		DataPoint pTemp;
 
@@ -315,14 +310,6 @@ public class PollutionThread extends Thread{
 			for (DataPoint i : pointsMeasured) {
 				fis.write((i.toString() + "\n").getBytes());
 			}
-			/*for (int i = 0; i < PollutionParam.data.length; i++) {
-				strout = "[";
-				for (int j = 0; j < PollutionParam.data[0].length; j++) {
-					strout += j + ", " + i + ", " + PollutionParam.data[j][i] + "]";
-				}
-				print = (strout + "\n").getBytes();
-				fis.write(print);
-			}*/
 			fis.close();
 
 		} catch (IOException e) {
