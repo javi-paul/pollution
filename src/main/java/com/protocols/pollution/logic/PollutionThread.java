@@ -98,7 +98,7 @@ public class PollutionThread extends Thread{
 		try {
 			DrawableSymbolGeo point = (Mapper.Drawables.addSymbolGeo(1, copter.getLocationGeo(),
 					DrawableSymbol.CIRCLE, 5, color, PollutionParam.STROKE_POINT));
-			//.updateUpRightText(String.format("%.2f", measure));
+			point.updateUpRightText(String.format("%.2f", measure));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -287,7 +287,7 @@ public class PollutionThread extends Thread{
 				/* Phase 1: Looking for the point with max pollution */
 				runAndTumble();
 				/* Phase 2: Exploring the area surrounding the point with max pollution */
-				newMax = explore();
+				newMax = explore();		
 			}
 		} catch (LocationNotReadyException e) {
 			e.printStackTrace();
